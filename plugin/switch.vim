@@ -3,9 +3,9 @@
 " Description: switch between related files easily
 " Author: anders@bladre.dk
 
-"if &cp || exists("g:loaded_switch")
-    "finish
-"endif
+if &cp || exists("g:loaded_switch")
+    finish
+endif
 
 let g:loaded_switch = "v0.1"
 let s:keepcpo            = &cpo
@@ -71,7 +71,8 @@ let s:switch_builtin_rules = {
     \ ],
     \ 'git': [
     \    {
-    \       'parent': '.git'
+    \       'parent': '.git',
+    \       'lhs': ['$', '/config', '']
     \    }
     \ ],
     \ 'p': [
