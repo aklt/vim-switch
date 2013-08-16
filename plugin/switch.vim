@@ -3,9 +3,9 @@
 " Description: switch between related files easily
 " Author: anders@bladre.dk
 
-if &cp || exists("g:loaded_switch")
-    finish
-endif
+"if &cp || exists("g:loaded_switch")
+    "finish
+"endif
 
 let g:loaded_switch = "v0.1"
 let s:keepcpo            = &cpo
@@ -55,10 +55,11 @@ let s:switch_builtin_rules = {
     \        '/', '_', 'g',
     \        '\.\([a-z]\+\)$', '-test.\1', '',
     \        '^', 'test/', ''
-    \      ]
+    \      ],
+    \      'quit': 1
     \    },
     \    {
-    \      'match': '\/test\/',
+    \      'match': '\-test\.\w\+$',
     \      'lhs': '^\(.*\)\/test\/.*$',
     \      'rhs': [
     \        '^.*\/test\/\(.*\)$', '\1', '',
@@ -66,6 +67,11 @@ let s:switch_builtin_rules = {
     \        '-test\.\(.*\)$', '.\1', '',
     \        '^', 'lib/', ''
     \      ]
+    \    }
+    \ ],
+    \ 'git': [
+    \    {
+    \       'parent': '.git'
     \    }
     \ ],
     \ 'p': [
@@ -85,7 +91,8 @@ let s:switch_builtin_rules = {
     \ ]
     \ }
 
-let s:switch_builtin_rules['coffee'] = s:switch_builtin_rules['javascript']
+let s:switch_builtin_rules['coffee'] =
+    \  s:switch_builtin_rules['javascript']
 
 fun! <SID>RunSubstitutes(str, substitutes)
     let s = a:substitutes
@@ -124,55 +131,75 @@ fun! <SID>GlobParentDir(dirName, startDir)
     endwhile
 endfun
 
-fun! <SID>ExecuteMatcher(matcherName, path)
+fun! <SID>ExecuteMatcher(matcherName, path, debug)
     if has_key(g:switch_rules, a:matcherName)
         let matchers = g:switch_rules[a:matcherName]
     elseif has_key(s:switch_builtin_rules, a:matcherName)
         let matchers = s:switch_builtin_rules[a:matcherName]
     else
-        echomsg 'switch.vim: No rule for type ' . a:matcherName
+        echomsg 'switch.vim: No rule for type "' . a:matcherName . '"'
         return 0
     endif
     let target = a:path
+    let should_quit = 0
     for matcher in matchers
+        if should_quit
+          if a:debug | echomsg 'switch.vim: quitting' | endif
+            return target
+        endif
         if has_key(matcher, 'match')
             if match(target, matcher['match']) < 0
                 continue
             endif
+            if a:debug
+                echomsg 'switch.vim: match ' . matcher['match']
+            endif
         endif
+        let should_quit = has_key(matcher, 'quit')
         if has_key(matcher, 'parent')
             let target = <SID>GlobParentDir(matcher['parent'], target)
+            if a:debug
+                echomsg 'switch.vim: parent ' . target
+            endif
         endif
         if has_key(matcher, 'lhs') && has_key(matcher, 'rhs')
             let target = <SID>GetNewPathName(target,
                             \  matcher['lhs'], matcher['rhs'])
+            if a:debug
+                echomsg 'switch.vim: lhs, rhs ' . target
+            endif
             continue
         endif
         if has_key(matcher, 'lhs')
             let target =
                   \ <SID>RunRegexOrSubstitutes(target, matcher['lhs'])
+            if a:debug | echomsg 'switch.vim: lhs ' . target | endif
             continue
         endif
         if has_key(matcher, 'rhs')
             let target =
                   \ <SID>RunRegexOrSubstitutes(target, matcher['rhs'])
+            if a:debug | echomsg 'switch.vim: rhs ' . target | endif
         endif
     endfor
     return target
 endfun
 
-fun! <SID>Switch(ft)
-    let ft = a:ft
+fun! <SID>Switch(...)
+    let ft = ''
+    if a:0 > 0
+        let ft = a:000[0]
+    endif
     if len(ft) == 0
         let ft = &ft
     endif
-    let newDir = <SID>ExecuteMatcher(ft, expand('%:p'))
+    let newDir = <SID>ExecuteMatcher(ft, expand('%:p'), a:0)
     if type(newDir) == type('') && len(newDir)
         exe ':' . g:switch_open . " " . newDir
     endif
 endfun
 
-command! -nargs=* Switch call <SID>Switch(<q-args>)
+command! -nargs=* Switch call <SID>Switch(<f-args>)
 
 let &cpo= s:keepcpo
 unlet s:keepcpo
