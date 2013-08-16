@@ -1,0 +1,18 @@
+*switch.txt*    Switch to a different file                2013-08-16
+=======================================================================
+Version: 0.1
+=======================================================================
+Contents
+
+    1. Purpose..............: |substitute-purpose|
+    2. Mappings.............: |substitute-maps|
+    3. Configuration........: |substitute-config|
+    4. History..............: |substitute-history|
+
+=======================================================================
+1. Purpose                                          *switch-purpose*
+
+Make it easier to switch between related files.
+
+=======================================================================
+vim:tw=78:ft=help
