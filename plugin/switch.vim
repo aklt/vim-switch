@@ -2,7 +2,7 @@
 " Version: 0.1
 " Description: switch between related files easily
 " Author: anders@bladre.dk
-"
+
 if &cp || exists("g:loaded_switch")
     finish
 endif
@@ -15,7 +15,19 @@ if !exists("g:switch_open")
     let g:switch_open = "edit"
 endif
 
-let s:switch_rules = {
+if !exists("g:switch_rules")
+    let g:switch_rules = {}
+endif
+
+if !exists("g:switch_mapping")
+    let g:switch_mapping = ',s'
+endif
+
+exe "nmap " . g:switch_mapping . " :Switch<CR>"
+exe "imap " . g:switch_mapping . " <c-o>:Switch<CR>"
+unlet g:switch_mapping
+
+let s:switch_builtin_rules = {
     \  'vim': [
     \    {
     \       'match': '\/plugin\/',
@@ -73,7 +85,7 @@ let s:switch_rules = {
     \ ]
     \ }
 
-let s:switch_rules['coffee'] = s:switch_rules['javascript']
+let s:switch_builtin_rules['coffee'] = s:switch_builtin_rules['javascript']
 
 fun! <SID>RunSubstitutes(str, substitutes)
     let s = a:substitutes
@@ -113,8 +125,10 @@ fun! <SID>GlobParentDir(dirName, startDir)
 endfun
 
 fun! <SID>ExecuteMatcher(matcherName, path)
-    if has_key(s:switch_rules, a:matcherName)
-        let matchers = s:switch_rules[a:matcherName]
+    if has_key(g:switch_rules, a:matcherName)
+        let matchers = g:switch_rules[a:matcherName]
+    elseif has_key(s:switch_builtin_rules, a:matcherName)
+        let matchers = s:switch_builtin_rules[a:matcherName]
     else
         echomsg 'switch.vim: No rule for type ' . a:matcherName
         return 0

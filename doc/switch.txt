@@ -1,18 +1,96 @@
-*switch.txt*    Switch to a different file                2013-08-16
+*switch.txt*    Switch to a different file                   2013-08-16
 =======================================================================
 Version: 0.1
 =======================================================================
 Contents
 
-    1. Purpose..............: |substitute-purpose|
-    2. Mappings.............: |substitute-maps|
-    3. Configuration........: |substitute-config|
-    4. History..............: |substitute-history|
+    1. Purpose..........................: |switch-purpose|
+    2. Command and Map..................: |switch-command|
+    3. Configuration....................: |switch-config|
 
 =======================================================================
-1. Purpose                                          *switch-purpose*
+1. Purpose                                             *switch-purpose*
 
-Make it easier to switch between related files.
+Make it easier to switch between related files using a set of
+rules to figure out the path and name of the file to open.
 
 =======================================================================
-vim:tw=78:ft=help
+2. Command and Map                        *switch-command* *switch-map*
+
+The default mapping is ',s'
+
+Invoking :Switch without arguments will use the |filetype| to find
+rules in |g:switch_rules| and if failing then in the builtin rules.
+
+If an argument is given it should specify the rule to run, for example:
+
+    :Switch r
+
+Will match the builtin rule for finding a README file in one of the
+parent directories.
+
+=======================================================================
+3. Configuration
+-----------------------------------------------------------------------
+                                                         *switch-rules*
+
+When the Switch command is envoked |g:switch_rules| is searched for a
+matching key and the rules in the matching array are executed to find
+out which file to open.
+
+    let g:switch_rules = {
+        \    'test': [
+        \        {
+        \            'match': 'foo',
+        \            'parent': '*.js',
+        \            'lhs': ['^', 'Hello', ''],
+        \            'rhs': ['$', 'World', ''],
+        \        },
+        \        ...
+        \    ],
+        \    ...
+        \  }
+
+If 'name' is the value of the current |filetype| or ":Switch name" is
+invoked each matcher in the corresponding array will be executed in the
+following order until one matches:
+
+  1. 'match': The current file should match for this rule to be run.
+  2. 'parent': Use |glob()| to try to find a file in parent directories
+  3. 'lhs': Run a substitution regex or an array of these
+  4. 'rhs': Same as 'lhs'
+
+The values of 'lhs' and 'rhs' should be
+
+  * a regular expression with a single capture group
+
+or
+
+  * a List containing sets of arguments to |substitute|
+
+If both 'lhs' and 'rhs' are defined the resulting path is the
+concatenation of the results of running these.
+
+Try invoking :Switch and have a look at the builtin rules in
+s:switch_builtin_rules.
+
+-----------------------------------------------------------------------
+                                                       *switch-mapping*
+
+Define a mapping that should be used to invoke :Switch without
+arguments.
+
+    let g:switch_mapping = ',s'
+
+This can be overridden with a different key sequence.
+
+-----------------------------------------------------------------------
+                                                          *switch-open*
+
+Specify how a found file should be opened.  Can be "edit", "split" or
+"vsplit".
+
+    let g:switch_open = "edit"
+
+=======================================================================
+vim:tw=72:ft=help
