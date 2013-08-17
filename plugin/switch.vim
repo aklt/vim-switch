@@ -183,6 +183,11 @@ fun! <SID>ExecuteMatcher(matcherName, path, debug)
             if a:debug | echomsg 'switch.vim: rhs ' . target | endif
         endif
     endfor
+    if target == a:path
+        echomsg 'switch.vim: rule "' . matcherName
+            \  . '" results in same file'
+        return 0
+    endif
     return target
 endfun
 
@@ -194,9 +199,9 @@ fun! <SID>Switch(...)
     if len(ft) == 0
         let ft = &ft
     endif
-    let newDir = <SID>ExecuteMatcher(ft, expand('%:p'), a:0)
-    if type(newDir) == type('') && len(newDir)
-        exe ':' . g:switch_open . " " . newDir
+    let newFile = <SID>ExecuteMatcher(ft, expand('%:p'), a:0 >= 2)
+    if type(newFile) == type('') && len(newFile)
+        exe ':' . g:switch_open . " " . newFile
     endif
 endfun
 
