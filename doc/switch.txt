@@ -45,6 +45,7 @@ out which file to open.
         \            'parent': '*.js',
         \            'lhs': ['^', 'Hello', ''],
         \            'rhs': ['$', 'World', ''],
+        \            'quit': 1
         \        },
         \        ...
         \    ],
@@ -70,6 +71,9 @@ or
 
 If both 'lhs' and 'rhs' are defined the resulting path is the
 concatenation of the results of running these.
+
+If 'quit' is present in the matching file will be returned without
+considering further rules.
 
 Try invoking :Switch and have a look at the builtin rules in
 s:switch_builtin_rules.
